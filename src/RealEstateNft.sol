@@ -53,8 +53,8 @@ contract RealEstateNft is ERC721, ERC2981 {
         uint256 priceWithDiscount = _price -
             (_price * MINT_DISCOUNT_AMT) /
             MINT_DISCOUNT_DENOMINATOR;
-        console.log("price with discount", priceWithDiscount);
-        console.log("mint token balance", balance);
+        // console.log("price with discount", priceWithDiscount);
+        // console.log("mint token balance", balance);
         require(priceWithDiscount <= balance, "not enough token paid");
 
         // check if already claimed
@@ -78,7 +78,8 @@ contract RealEstateNft is ERC721, ERC2981 {
         // check the input token paid
         uint256 amount = IERC20(USDC).balanceOf(address(this));
         uint256 balance = amount - priceTokenReserve;
-        require(price <= balance, "not enough token paid");
+        console.log("amount and priceTokenReserve", amount, priceTokenReserve);
+        require(price <= balance, "Not enough token paid");
         console.log("mint token balance", balance);
 
         // mint tokens

@@ -15,6 +15,8 @@ contract RealEstateNftTest is Test {
     MockUSDC mockUsdc;
 
     address bob;
+    address attacker;
+    address userWithNoDiscount;
     uint256 constant NFT_PRICE = 100 * 1E6;
     uint256 constant NFT_PRICE_WTIH_DISCOUNT = 90 * 1E6; // 10% discount
 
@@ -23,9 +25,16 @@ contract RealEstateNftTest is Test {
         realEstateNft = new RealEstateNft(merkelTreeRoot, address(mockUsdc));
 
         bob = address(0x01);
+        attacker = address(0x09);
+        userWithNoDiscount = address(0x10);
 
-        //transfer some usdc to bob
+        //transfer some usdc to userWithNoDiscount
+        IERC20(mockUsdc).transfer(userWithNoDiscount, 100 * 1e6); // 100 usdc
+
         IERC20(mockUsdc).transfer(bob, 100 * 1e6); // 100 usdc
+
+        // transfer to attacker
+        IERC20(mockUsdc).transfer(attacker, 100 * 1e6); // 100 usdc
     }
 
     function testMintWithDiscount() public {
@@ -56,5 +65,54 @@ contract RealEstateNftTest is Test {
         assertEq(ownerOfToken1, address(bob));
 
         // console.log(amount, ownerOfToken1);
+    }
+
+    function testMintNonWhitelistedDiscount() public {
+        bytes32[] memory proof = new bytes32[](3);
+        proof[
+            0
+        ] = 0x50bca9edd621e0f97582fa25f616d475cabe2fd783c8117900e5fed83ec22a7c;
+        proof[
+            1
+        ] = 0x8138140fea4d27ef447a72f4fcbc1ebb518cca612ea0d392b695ead7f8c99ae6;
+        proof[
+            2
+        ] = 0x9005e06090901cdd6ef7853ac407a641787c28a78cb6327999fc51219ba3c880;
+
+        vm.startPrank(attacker);
+        IERC20(mockUsdc).transfer(
+            address(realEstateNft),
+            NFT_PRICE_WTIH_DISCOUNT
+        );
+        vm.expectRevert("Invalid proof");
+        realEstateNft.mint(NFT_PRICE, attacker, 9, proof);
+        vm.stopPrank();
+    }
+
+    function testMindWithoutDiscount() public {
+        vm.startPrank(userWithNoDiscount);
+        IERC20(mockUsdc).transfer(address(realEstateNft), 100 * 1e6);
+        realEstateNft.mint(NFT_PRICE, userWithNoDiscount);
+        vm.stopPrank();
+
+        uint amount = realEstateNft.balanceOf(userWithNoDiscount);
+        address ownerOfToken1 = realEstateNft.ownerOf(1);
+
+        assertEq(amount, 1);
+        assertEq(ownerOfToken1, address(userWithNoDiscount));
+    }
+
+    function testTwoUserMintingRevert() public {
+        // User 1 mint
+        vm.startPrank(userWithNoDiscount);
+        IERC20(mockUsdc).transfer(address(realEstateNft), 100 * 1e6);
+        realEstateNft.mint(NFT_PRICE, userWithNoDiscount);
+        vm.stopPrank();
+
+        // User 2 mint fail due to not enough paid
+        vm.startPrank(userWithNoDiscount);
+        vm.expectRevert("Not enough token paid");
+        realEstateNft.mint(NFT_PRICE, userWithNoDiscount);
+        vm.stopPrank();
     }
 }
