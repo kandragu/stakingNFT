@@ -67,7 +67,7 @@ contract RealEstateNft is ERC721, ERC2981 {
         BitMaps.setTo(_discountList, index, true);
 
         // mint tokens
-        _updatePriceToken(balance);
+        _updatePriceToken(amount);
         _tokenIdCounter++;
         tokenIdCounter = _tokenIdCounter;
         _safeMint(to, tokenIdCounter);
@@ -84,7 +84,7 @@ contract RealEstateNft is ERC721, ERC2981 {
         console.log("mint token balance", balance);
 
         // mint tokens
-        _updatePriceToken(balance);
+        _updatePriceToken(amount);
         _tokenIdCounter++;
         _safeMint(to, _tokenIdCounter);
     }
