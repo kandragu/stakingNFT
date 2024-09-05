@@ -3,6 +3,7 @@ pragma solidity 0.8.20;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {RealEstateNft} from "../RealEstateNft.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -11,7 +12,12 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {console} from "forge-std/Test.sol";
 import {RewardToken} from "../RewardToken.sol";
 
-contract StakingReward is ReentrancyGuard, Pausable, Ownable2Step {
+contract StakingReward is
+    IERC721Receiver,
+    ReentrancyGuard,
+    Pausable,
+    Ownable2Step
+{
     /* ========== STATE VARIABLES ========== */
 
     RewardToken public rewardsToken;
@@ -76,12 +82,13 @@ contract StakingReward is ReentrancyGuard, Pausable, Ownable2Step {
     function stake(
         uint256 tokenId
     ) external nonReentrant whenNotPaused updateReward(msg.sender) {
-        // require(amount > 0, "Cannot stake 0");
-        _totalSupply++;
-        _balances[msg.sender]++;
-        _owners[tokenId] = msg.sender;
         stakingNFT.transferFrom(msg.sender, address(this), tokenId);
-        emit Staked(msg.sender, tokenId);
+        // _totalSupply++;
+        // _balances[msg.sender]++;
+        // _owners[tokenId] = msg.sender;
+        // stakingNFT.transferFrom(msg.sender, address(this), tokenId);
+        // emit Staked(msg.sender, tokenId);
+        _stake(tokenId, msg.sender);
     }
 
     function withdraw(
@@ -126,33 +133,14 @@ contract StakingReward is ReentrancyGuard, Pausable, Ownable2Step {
         _;
     }
 
-    /* ========== RESTRICTED FUNCTIONS ========== */
+    /* ========= Internal ========= */
 
-    // function notifyRewardAmount(
-    //     uint256 reward
-    // ) external onlyOwner updateReward(address(0)) {
-    //     if (block.timestamp >= periodFinish) {
-    //         rewardRate = reward / rewardsDuration;
-    //     } else {
-    //         uint256 remaining = periodFinish - block.timestamp;
-    //         uint256 leftover = remaining * rewardRate;
-    //         rewardRate = (reward + leftover) / rewardsDuration;
-    //     }
-
-    //     // Ensure the provided reward amount is not more than the balance in the contract.
-    //     // This keeps the reward rate in the right range, preventing overflows due to
-    //     // very high values of rewardRate in the earned and rewardsPerToken functions;
-    //     // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
-    //     uint balance = rewardsToken.balanceOf(address(this));
-    //     require(
-    //         rewardRate <= balance / rewardsDuration,
-    //         "Provided reward too high"
-    //     );
-
-    //     lastUpdateTime = block.timestamp;
-    //     periodFinish = block.timestamp + rewardsDuration;
-    //     emit RewardAdded(reward);
-    // }
+    function _stake(uint256 tokenId, address from) private {
+        _totalSupply++;
+        _balances[from]++;
+        _owners[tokenId] = from;
+        emit Staked(from, tokenId);
+    }
 
     /* ========== EVENTS ========== */
 
@@ -162,4 +150,18 @@ contract StakingReward is ReentrancyGuard, Pausable, Ownable2Step {
     event RewardPaid(address indexed user, uint256 reward);
     event RewardsDurationUpdated(uint256 newDuration);
     event Recovered(address token, uint256 amount);
+
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external override returns (bytes4) {
+        require(msg.sender == address(stakingNFT), "Unsupported NFT");
+
+        // uint256 tokenId = abi.decode(data, (uint256));
+        _stake(tokenId, from);
+
+        return this.onERC721Received.selector;
+    }
 }
