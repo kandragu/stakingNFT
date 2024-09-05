@@ -67,8 +67,11 @@ contract StakingRewardsTest is Test {
 
         // One day after bob stake his nft
         vm.startPrank(bob);
-        realEstateNft.approve(address(stakingReward), bobsTokenId);
-        stakingReward.stake(bobsTokenId);
+        realEstateNft.safeTransferFrom(
+            bob,
+            address(stakingReward),
+            bobsTokenId
+        );
         vm.stopPrank();
 
         // Advance the block timestamp by two days
@@ -113,15 +116,7 @@ contract StakingRewardsTest is Test {
             NFT_PRICE_WTIH_DISCOUNT
         );
         uint bobTokenId2 = realEstateNft.mint(NFT_PRICE, bob, 8, proof);
-        address token2Owner = realEstateNft.ownerOf(bobTokenId2);
-        console.log("token2Owner", token2Owner, bobTokenId2);
         // bob stake the 2nd nft
-        // realEstateNft.approve(address(stakingReward), bobTokenId2);
-        // stakingReward.stake(bobTokenId2);
-        //bob approves the operator (test contract)
-        // realEstateNft.setApprovalForAll(address(this), true);
-
-        // operator
         realEstateNft.safeTransferFrom(
             bob,
             address(stakingReward),

@@ -71,6 +71,7 @@ contract StakingReward is
     }
 
     function earned(address account) public view returns (uint256) {
+        console.log("earned", _balances[account]);
         return
             ((_balances[account] *
                 (rewardPerToken() - userRewardPerTokenPaid[account])) /
@@ -156,8 +157,9 @@ contract StakingReward is
         address from,
         uint256 tokenId,
         bytes calldata data
-    ) external override returns (bytes4) {
+    ) external override updateReward(from) returns (bytes4) {
         require(msg.sender == address(stakingNFT), "Unsupported NFT");
+        console.log("onERC721Received called", tokenId);
 
         // uint256 tokenId = abi.decode(data, (uint256));
         _stake(tokenId, from);
