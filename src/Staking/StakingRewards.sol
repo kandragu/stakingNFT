@@ -95,7 +95,7 @@ contract StakingReward is
     function withdraw(
         uint256 tokenId
     ) public nonReentrant updateReward(msg.sender) {
-        require(_owners[tokenId] == msg.sender, "Cannot withdraw ");
+        require(_owners[tokenId] == msg.sender, "Cannot withdraw");
         _totalSupply--;
         _balances[msg.sender]--;
         stakingNFT.transferFrom(address(this), msg.sender, tokenId);

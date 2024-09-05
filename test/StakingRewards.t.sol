@@ -21,6 +21,7 @@ contract StakingRewardsTest is Test {
     bytes32[] proof = new bytes32[](3);
 
     address bob;
+    address alice;
     uint256 bobsTokenId;
 
     function setUp() public {
@@ -36,6 +37,7 @@ contract StakingRewardsTest is Test {
         rewardToken.setMinter(address(stakingReward));
 
         bob = address(0x01);
+        alice = address(0x20);
 
         mockUsdc.transfer(bob, 1000 * 1e6);
 
@@ -134,5 +136,43 @@ contract StakingRewardsTest is Test {
         uint bobRewardAmt = rewardToken.balanceOf(address(bob));
 
         assertEq(bobRewardAmt, 40 * 1e18);
+    }
+
+    function testStakeAndWithdraw() public {
+        vm.startPrank(bob);
+        realEstateNft.safeTransferFrom(
+            bob,
+            address(stakingReward),
+            bobsTokenId
+        );
+        vm.stopPrank();
+
+        address previousOwner = realEstateNft.ownerOf(bobsTokenId);
+
+        // bob withdraw
+        vm.prank(bob);
+        stakingReward.withdraw(bobsTokenId);
+        address currOwner = realEstateNft.ownerOf(bobsTokenId);
+
+        assertEq(previousOwner, address(stakingReward));
+        assertEq(currOwner, address(bob));
+    }
+
+    function testStakeAndWithdrawOnlyOwner() public {
+        vm.startPrank(bob);
+        realEstateNft.safeTransferFrom(
+            bob,
+            address(stakingReward),
+            bobsTokenId
+        );
+        vm.stopPrank();
+
+        // Advance the block timestamp by two days
+        vm.warp(block.timestamp + 1 days);
+
+        // bob withdraw
+        vm.expectRevert("Cannot withdraw");
+        vm.prank(alice);
+        stakingReward.withdraw(bobsTokenId);
     }
 }
