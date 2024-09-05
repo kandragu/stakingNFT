@@ -8,15 +8,13 @@ import {BitMaps} from "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 
-import {console} from "forge-std/Test.sol";
-
 contract RealEstateNft is ERC721, ERC2981 {
     uint256 _tokenIdCounter;
     uint96 constant ROYALTY_FEE = 250; // 2.5% royalty
     uint96 constant MINT_DISCOUNT_AMT = 1000; // 10% discount
     uint96 constant MINT_DISCOUNT_DENOMINATOR = 10000; // 10% discount
 
-    uint256 constant MAX_SUPPLY = 10000;
+    uint256 constant MAX_SUPPLY = 1000;
     bytes32 public immutable merkleRoot;
     BitMaps.BitMap private _discountList;
 
@@ -53,8 +51,6 @@ contract RealEstateNft is ERC721, ERC2981 {
         uint256 priceWithDiscount = _price -
             (_price * MINT_DISCOUNT_AMT) /
             MINT_DISCOUNT_DENOMINATOR;
-        // console.log("price with discount", priceWithDiscount);
-        // console.log("mint token balance", balance);
         require(priceWithDiscount <= balance, "not enough token paid");
 
         // check if already claimed
@@ -79,9 +75,7 @@ contract RealEstateNft is ERC721, ERC2981 {
         // check the input token paid
         uint256 amount = IERC20(USDC).balanceOf(address(this));
         uint256 balance = amount - priceTokenReserve;
-        console.log("amount and priceTokenReserve", amount, priceTokenReserve);
         require(price <= balance, "Not enough token paid");
-        console.log("mint token balance", balance);
 
         // mint tokens
         _updatePriceToken(amount);

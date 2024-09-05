@@ -9,7 +9,6 @@ import {RealEstateNft} from "../RealEstateNft.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {console} from "forge-std/Test.sol";
 import {RewardToken} from "../RewardToken.sol";
 
 contract StakingReward is
@@ -59,11 +58,6 @@ contract StakingReward is
             return rewardPerTokenStored;
         }
 
-        console.log(
-            "lastTimeRewardApplicable() - lastUpdateTime",
-            lastTimeRewardApplicable(),
-            lastUpdateTime
-        );
         return
             rewardPerTokenStored +
             (lastTimeRewardApplicable() - lastUpdateTime) *
@@ -71,7 +65,6 @@ contract StakingReward is
     }
 
     function earned(address account) public view returns (uint256) {
-        console.log("earned", _balances[account]);
         return
             ((_balances[account] *
                 (rewardPerToken() - userRewardPerTokenPaid[account])) /
@@ -104,7 +97,6 @@ contract StakingReward is
 
     function getReward() public nonReentrant updateReward(msg.sender) {
         uint256 reward = rewards[msg.sender];
-        console.log("[getReward]", reward);
         if (reward > 0) {
             rewards[msg.sender] = 0;
             rewardsToken.mint(msg.sender, reward * 1e18);
@@ -122,11 +114,6 @@ contract StakingReward is
     modifier updateReward(address account) {
         rewardPerTokenStored = rewardPerToken();
         lastUpdateTime = lastTimeRewardApplicable();
-        console.log(
-            "rewardPerTokenStored, lastUpdateTime",
-            rewardPerTokenStored,
-            lastUpdateTime
-        );
         if (account != address(0)) {
             rewards[account] = earned(account);
             userRewardPerTokenPaid[account] = rewardPerTokenStored;
@@ -159,7 +146,6 @@ contract StakingReward is
         bytes calldata data
     ) external override updateReward(from) returns (bytes4) {
         require(msg.sender == address(stakingNFT), "Unsupported NFT");
-        console.log("onERC721Received called", tokenId);
 
         // uint256 tokenId = abi.decode(data, (uint256));
         _stake(tokenId, from);
