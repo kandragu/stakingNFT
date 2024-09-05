@@ -44,7 +44,7 @@ contract RealEstateNft is ERC721, ERC2981 {
         address to,
         uint256 index,
         bytes32[] calldata proof
-    ) external {
+    ) external returns (uint256 tokenIdCounter) {
         require(_tokenIdCounter < MAX_SUPPLY, "Max supply reached");
 
         // check the input token paid
@@ -69,7 +69,8 @@ contract RealEstateNft is ERC721, ERC2981 {
         // mint tokens
         _updatePriceToken(balance);
         _tokenIdCounter++;
-        _safeMint(to, _tokenIdCounter);
+        tokenIdCounter = _tokenIdCounter;
+        _safeMint(to, tokenIdCounter);
     }
 
     function mint(uint256 price, address to) external {

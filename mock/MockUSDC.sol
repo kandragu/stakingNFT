@@ -8,7 +8,7 @@ contract MockUSDC is ERC20 {
         super._mint(msg.sender, 100000 * 1e6); // mint a million to owner
     }
 
-    function decimals() public view override returns (uint8) {
+    function decimals() public pure override returns (uint8) {
         return 6;
     }
 }
