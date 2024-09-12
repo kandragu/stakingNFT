@@ -3,12 +3,13 @@ pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import  "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import {BitMaps} from "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 
-contract RealEstateNft is ERC721, ERC2981 {
+contract RealEstateNft is ERC721, ERC2981, ReentrancyGuard {
     uint256 _tokenIdCounter;
     uint96 constant ROYALTY_FEE = 250; // 2.5% royalty
     uint96 constant MINT_DISCOUNT_AMT = 1000; // 10% discount
@@ -42,7 +43,7 @@ contract RealEstateNft is ERC721, ERC2981 {
         address to,
         uint256 index,
         bytes32[] calldata proof
-    ) external returns (uint256 tokenIdCounter) {
+    ) external nonReentrant returns (uint256 tokenIdCounter) {
         require(_tokenIdCounter < MAX_SUPPLY, "Max supply reached");
 
         // check the input token paid
@@ -69,7 +70,7 @@ contract RealEstateNft is ERC721, ERC2981 {
         _safeMint(to, tokenIdCounter);
     }
 
-    function mint(uint256 price, address to) external {
+    function mint(uint256 price, address to) nonReentrant external {
         require(_tokenIdCounter < MAX_SUPPLY, "Max supply reached");
 
         // check the input token paid
